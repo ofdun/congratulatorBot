@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"telegramBot/internal/download"
 	"telegramBot/internal/parser"
 )
 
@@ -19,11 +19,24 @@ func main() {
 		panic(err)
 	}
 
-	for _, h := range holidays {
-		fmt.Println(h)
+	postcards, err := newParser.GetPostcardsPages(holidays[0])
+
+	if err != nil {
+		panic(err)
 	}
 
-	//html := newParser.HTML
-	//
-	//println(html)
+	// Updating postcards ( adding links )
+	for i := range postcards {
+		err = newParser.GetPostcardHref(&postcards[i])
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	for i := range postcards {
+		err = download.PostcardDownload("internal/storage/postcards/", &postcards[i])
+		if err != nil {
+			panic(err)
+		}
+	}
 }
