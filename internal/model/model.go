@@ -2,24 +2,29 @@ package model
 
 type Holiday struct {
 	Name string
+	Date string
 	Href string
 }
 
-func NewHoliday(name string, href string) *Holiday {
+func NewHoliday(name string, date string, href string) *Holiday {
 	return &Holiday{
 		Name: name,
+		Date: date,
 		Href: href,
 	}
 }
 
 type Postcard struct {
-	Holiday string
-	Href    string
+	Holiday    string
+	Page       string
+	Href       string
+	YouTube    bool
+	Downloaded bool
 }
 
-func NewPostcard(holiday string, href string) *Postcard {
+func NewPostcard(holiday string, page string) *Postcard {
 	return &Postcard{
 		Holiday: holiday,
-		Href:    href,
+		Page:    page,
 	}
 }
