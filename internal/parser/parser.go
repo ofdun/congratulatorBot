@@ -23,7 +23,11 @@ func (p *Parser) GetHTML() error {
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+	defer func() {
+		if err = response.Body.Close(); err != nil {
+			return
+		}
+	}()
 
 	html, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -89,7 +93,11 @@ func (p *Parser) GetPostcardsPages(holiday model.Holiday) ([]model.Postcard, err
 	if err != nil {
 		return postcards, err
 	}
-	defer response.Body.Close()
+	defer func() {
+		if err = response.Body.Close(); err != nil {
+			return
+		}
+	}()
 
 	html, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -126,7 +134,11 @@ func youTubeLink(url string) bool {
 
 func (p *Parser) GetPostcardHref(postcard *model.Postcard) error {
 	response, err := http.Get(postcard.Page)
-	defer response.Body.Close()
+	defer func() {
+		if err = response.Body.Close(); err != nil {
+			return
+		}
+	}()
 
 	if err != nil {
 		return err
