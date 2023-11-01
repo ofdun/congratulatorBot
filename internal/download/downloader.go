@@ -31,13 +31,21 @@ func PostcardsDownloadYoutube(path, filename, url string) error {
 	if err != nil {
 		return err
 	}
-	defer stream.Close()
+	defer func() {
+		if err = stream.Close(); err != nil {
+			return
+		}
+	}()
 
 	out, err := os.Create(path + filename)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() {
+		if err = out.Close(); err != nil {
+			return
+		}
+	}()
 
 	_, err = io.Copy(out, stream)
 	if err != nil {
@@ -58,6 +66,8 @@ func PostcardDownload(path string, postcard *model.Postcard) error {
 			return err
 		}
 		postcard.Downloaded = true
+		postcard.Name = filename
+		postcard.Path = path + filename
 		return nil
 	}
 
@@ -65,17 +75,27 @@ func PostcardDownload(path string, postcard *model.Postcard) error {
 	filename += suffix
 
 	out, err := os.Create(path + filename)
-	defer out.Close()
+	defer func() {
+		if err = out.Close(); err != nil {
+			return
+		}
+	}()
 
 	if err != nil {
 		return err
 	}
 
 	response, err := http.Get(postcard.Href)
-	defer response.Body.Close()
+	defer func() {
+		if err = response.Body.Close(); err != nil {
+			return
+		}
+	}()
 
 	_, err = io.Copy(out, response.Body)
 	postcard.Downloaded = true
+	postcard.Name = filename
+	postcard.Path = path + filename
 
 	if err != nil {
 		return err
