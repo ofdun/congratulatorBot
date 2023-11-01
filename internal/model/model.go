@@ -20,6 +20,8 @@ type Postcard struct {
 	Href       string
 	YouTube    bool
 	Downloaded bool
+	Path       string
+	Name       string
 }
 
 func NewPostcard(holiday string, page string) *Postcard {
