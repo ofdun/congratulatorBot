@@ -75,7 +75,7 @@ func (p *PostcardsPostgresStorage) GetPostcardsFromStorage() ([][2]string, error
 	return postcards, err
 }
 
-func (p *PostcardsPostgresStorage) AddPostcard(postcard *model.Postcard) error {
+func (p *PostcardsPostgresStorage) AddPostcardToStorage(postcard *model.Postcard) error {
 
 	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		p.db.host, p.db.port, p.db.user, p.db.password, p.db.dbname, p.db.sslMode)
@@ -96,5 +96,26 @@ func (p *PostcardsPostgresStorage) AddPostcard(postcard *model.Postcard) error {
 		return err
 	}
 
+	return nil
+}
+
+func (p *PostcardsPostgresStorage) RemovePostcardFromStorage(postcard *model.Postcard) error {
+	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		p.db.host, p.db.port, p.db.user, p.db.password, p.db.dbname, p.db.sslMode)
+
+	db, err := sql.Open("postgres", dbInfo)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err = db.Close(); err != nil {
+			return
+		}
+	}()
+
+	query := "DELETE FROM postcards WHERE Name=$1"
+	if _, err = db.Exec(query, postcard.Name); err != nil {
+		return err
+	}
 	return nil
 }
