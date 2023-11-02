@@ -119,3 +119,55 @@ func (p *PostcardsPostgresStorage) RemovePostcardFromStorage(postcard *model.Pos
 	}
 	return nil
 }
+
+func (p *PostcardsPostgresStorage) ClearDatabase() error {
+	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		p.db.host, p.db.port, p.db.user, p.db.password, p.db.dbname, p.db.sslMode)
+
+	db, err := sql.Open("postgres", dbInfo)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err = db.Close(); err != nil {
+			return
+		}
+	}()
+
+	query := "DELETE FROM postcards"
+	if _, err = db.Exec(query); err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetRandomPostcardPath() (string, error) {
+	// TODO env variables
+	// dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+	//	p.db.host, p.db.port, p.db.user, p.db.password, p.db.dbname, p.db.sslMode)
+	dbInfo := "host=localhost port=5432 user=postgres password=postgres dbname=users_bot sslmode=disable"
+	var path string
+
+	db, err := sql.Open("postgres", dbInfo)
+	if err != nil {
+		return path, err
+	}
+	defer func() {
+		if err = db.Close(); err != nil {
+			return
+		}
+	}()
+
+	query := "SELECT path FROM postcards ORDER BY RANDOM() LIMIT 1"
+	result, err := db.Query(query)
+	for result.Next() {
+		if err = result.Scan(&path); err != nil {
+			return path, err
+		}
+	}
+	if err != nil {
+		return path, err
+	}
+
+	return path, err
+}
