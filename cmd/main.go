@@ -57,7 +57,7 @@ func main() {
 	//		panic(err)
 	//	}
 	//}
-	token := "6114787188:AAG-Fe1HOyUqtV4E8_aSxC9Jee2-1ZQEa0Q"
+	token := "..."
 	telegramBot, err := bots.NewTelegramBot(token)
 	if err != nil {
 		panic(err)
