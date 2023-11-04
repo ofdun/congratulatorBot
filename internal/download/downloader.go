@@ -11,9 +11,17 @@ import (
 	"time"
 )
 
-func GetSuffix(str string) string {
+func getSuffix(str string) string {
 	parts := strings.Split(str, ".")
 	return "." + parts[len(parts)-1]
+}
+
+func IsVideo(path string) bool {
+	videoFormats := map[string]bool{
+		".mp4": true, ".mov": true, ".avi": true, ".mkv": true,
+	}
+	suffix := getSuffix(path)
+	return videoFormats[suffix]
 }
 
 func PostcardsDownloadYoutube(path, filename, url string) error {
@@ -71,7 +79,7 @@ func PostcardDownload(path string, postcard *model.Postcard) error {
 		return nil
 	}
 
-	suffix := GetSuffix(postcard.Href)
+	suffix := getSuffix(postcard.Href)
 	filename += suffix
 
 	out, err := os.Create(path + filename)
