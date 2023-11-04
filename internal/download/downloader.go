@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func getSuffix(str string) string {
+func GetSuffix(str string) string {
 	parts := strings.Split(str, ".")
 	return "." + parts[len(parts)-1]
 }
@@ -71,7 +71,7 @@ func PostcardDownload(path string, postcard *model.Postcard) error {
 		return nil
 	}
 
-	suffix := getSuffix(postcard.Href)
+	suffix := GetSuffix(postcard.Href)
 	filename += suffix
 
 	out, err := os.Create(path + filename)
