@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "github.com/lib/pq"
+	"os"
 	"telegramBot/internal/bots"
 	"telegramBot/internal/download"
 	"telegramBot/internal/parser"
@@ -40,6 +41,13 @@ func main() {
 		}
 	}
 
+	if err = os.RemoveAll("internal/storage/postcards/"); err != nil {
+		panic(err)
+	}
+	if err = os.Mkdir("internal/storage/postcards/", 777); err != nil {
+		panic(err)
+	}
+
 	for i := range postcards {
 		if err = download.PostcardDownload("internal/storage/postcards/", &postcards[i]); err != nil {
 			panic(err)
@@ -52,7 +60,7 @@ func main() {
 		}
 	}
 
-	token := "6114787188:AAH32av_TK7_Jk_HFXKOGE1FCcqo9XSNpGs"
+	token := "TOKEN"
 	bot, err := bots.NewTelegramBot(token)
 	if err != nil {
 		panic(err)
