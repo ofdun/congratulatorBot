@@ -2,9 +2,7 @@ package main
 
 import (
 	_ "github.com/lib/pq"
-	"os"
 	"telegramBot/internal/bots"
-	"telegramBot/internal/download"
 	"telegramBot/internal/parser"
 	"telegramBot/internal/storage"
 )
@@ -41,37 +39,31 @@ func main() {
 		}
 	}
 
-	if err = os.RemoveAll("internal/storage/postcards/"); err != nil {
-		panic(err)
-	}
-	if err = os.Mkdir("internal/storage/postcards/", 777); err != nil {
-		panic(err)
-	}
-
-	for i := range postcards {
-		if err = download.PostcardDownload("internal/storage/postcards/", &postcards[i]); err != nil {
-			panic(err)
-		}
-	}
-
-	for i := range postcards {
-		if err = postcardsStorage.AddPostcardToStorage(&postcards[i]); err != nil {
-			panic(err)
-		}
-	}
-
-	token := "TOKEN"
-	bot, err := bots.NewTelegramBot(token)
+	//if err = os.RemoveAll("internal/storage/postcards/"); err != nil {
+	//	panic(err)
+	//}
+	//if err = os.Mkdir("internal/storage/postcards/", 0777); err != nil {
+	//	panic(err)
+	//}
+	//
+	//for i := range postcards {
+	//	if err = download.PostcardDownload("internal/storage/postcards/", &postcards[i]); err != nil {
+	//		panic(err)
+	//	}
+	//}
+	//
+	//for i := range postcards {
+	//	if err = postcardsStorage.AddPostcardToStorage(&postcards[i]); err != nil {
+	//		panic(err)
+	//	}
+	//}
+	token := "6114787188:AAG-Fe1HOyUqtV4E8_aSxC9Jee2-1ZQEa0Q"
+	telegramBot, err := bots.NewTelegramBot(token)
 	if err != nil {
 		panic(err)
 	}
 
-	updates, err := bots.SetupUpdates(&bot)
-	if err != nil {
-		panic(err)
-	}
-
-	go bots.StartBotPolling(&bot, updates)
+	go bots.StartTelegramBot(telegramBot)
 
 	select {}
 }
