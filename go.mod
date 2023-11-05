@@ -16,6 +16,7 @@ require (
 	github.com/dop251/goja v0.0.0-20230828202809-3dbe69dd2b8e // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/google/pprof v0.0.0-20230907193218-d3ddc7976beb // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 )
