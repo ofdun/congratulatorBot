@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"os"
 	"telegramBot/internal/bots"
 )
 
@@ -13,14 +12,15 @@ func main() {
 		panic(err)
 	}
 
-	telegramToken := os.Getenv("TELEGRAM_BOT_TOKEN")
-	telegramBot, err := bots.NewTelegramBot(telegramToken)
-	if err != nil {
-		panic(err)
-	}
-
-	go bots.StartTelegramBot(telegramBot)
-	go bots.EveryMinuteLoop(telegramBot)
+	//telegramToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	//telegramBot, err := bots.NewTelegramBot(telegramToken)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//go bots.StartTelegramBot(telegramBot)
+	//go bots.EveryMinuteLoop(telegramBot)
+	go bots.StartDiscordBot()
 
 	select {}
 }
