@@ -1,2 +1,3 @@
 .idea/
 ./internal/storage/postcards/*
+./cmd/.env
