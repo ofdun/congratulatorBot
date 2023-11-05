@@ -1,69 +1,26 @@
 package main
 
 import (
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"os"
 	"telegramBot/internal/bots"
-	"telegramBot/internal/parser"
-	"telegramBot/internal/storage"
 )
 
 func main() {
-	postcardsDatabase := storage.NewDatabase()
-	postcardsStorage := storage.NewPostcardsPostgresStorage(postcardsDatabase)
-	if err := postcardsStorage.ClearDatabase(); err != nil {
-		panic(err)
-	}
-
-	newParser := parser.NewParser(
-		"https://3d-galleru.ru/archive/cat/kalendar-42/")
-
-	if err := newParser.GetHTML(); err != nil {
-		panic(err)
-	}
-
-	holidays, err := newParser.GetHolidays()
+	err := godotenv.Load("cmd/.env")
 	if err != nil {
 		panic(err)
 	}
 
-	postcards, err := newParser.GetPostcardsPages(holidays[0])
-
-	if err != nil {
-		panic(err)
-	}
-
-	// Updating postcards ( adding links )
-	for i := range postcards {
-		if err = newParser.GetPostcardHref(&postcards[i]); err != nil {
-			panic(err)
-		}
-	}
-
-	//if err = os.RemoveAll("internal/storage/postcards/"); err != nil {
-	//	panic(err)
-	//}
-	//if err = os.Mkdir("internal/storage/postcards/", 0777); err != nil {
-	//	panic(err)
-	//}
-	//
-	//for i := range postcards {
-	//	if err = download.PostcardDownload("internal/storage/postcards/", &postcards[i]); err != nil {
-	//		panic(err)
-	//	}
-	//}
-	//
-	//for i := range postcards {
-	//	if err = postcardsStorage.AddPostcardToStorage(&postcards[i]); err != nil {
-	//		panic(err)
-	//	}
-	//}
-	token := "..."
-	telegramBot, err := bots.NewTelegramBot(token)
+	telegramToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	telegramBot, err := bots.NewTelegramBot(telegramToken)
 	if err != nil {
 		panic(err)
 	}
 
 	go bots.StartTelegramBot(telegramBot)
+	go bots.EveryMinuteLoop(telegramBot)
 
 	select {}
 }
