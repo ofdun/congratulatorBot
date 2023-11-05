@@ -1,16 +1,18 @@
 package storage
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+	"os"
+)
 
-type User struct {
-	Id   int64
-	Time string
-}
+func AddUserToMailing(id int64, time_ int64) error {
+	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"), os.Getenv("SSLMODE"))
 
-func (u *User) AddUserToMailing() error {
-	dbinfo := "host=localhost port=5432 user=postgres password=postgres dbname=users_bot sslmode=disable"
-
-	db, err := sql.Open("postgres", dbinfo)
+	db, err := sql.Open("postgres", dbInfo)
 	if err != nil {
 		return err
 	}
@@ -21,7 +23,7 @@ func (u *User) AddUserToMailing() error {
 	}()
 
 	query := "INSERT INTO users (id, mailing_time) VALUES ($1, $2)"
-	if _, err = db.Exec(query, u.Id, u.Time); err != nil {
+	if _, err = db.Exec(query, id, time_); err != nil {
 		return err
 	}
 
@@ -29,9 +31,12 @@ func (u *User) AddUserToMailing() error {
 }
 
 func RemoveUserFromMailing(id int64) error {
-	dbinfo := "host=localhost port=5432 user=postgres password=postgres dbname=users_bot sslmode=disable"
+	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"), os.Getenv("SSLMODE"))
 
-	db, err := sql.Open("postgres", dbinfo)
+	db, err := sql.Open("postgres", dbInfo)
 	if err != nil {
 		return err
 	}
@@ -49,39 +54,15 @@ func RemoveUserFromMailing(id int64) error {
 	return nil
 }
 
-func (u *User) GetMailingTime() (string, error) {
-	dbinfo := "host=localhost port=5432 user=postgres password=postgres dbname=users_bot sslmode=disable"
+func GetIDsFromTime(time int) ([]int64, error) {
+	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"), os.Getenv("SSLMODE"))
 
-	db, err := sql.Open("postgres", dbinfo)
+	db, err := sql.Open("postgres", dbInfo)
 	if err != nil {
-		return "", err
-	}
-	defer func() {
-		if err = db.Close(); err != nil {
-			return
-		}
-	}()
-
-	query := "SELECT mailing_time FROM users WHERE id=$1"
-	result, err := db.Query(query, u.Id)
-	for result.Next() {
-		if err = result.Scan(&u.Time); err != nil {
-			return "", err
-		}
-	}
-	if err != nil {
-		return "", err
-	}
-
-	return u.Time, nil
-}
-
-func (u *User) GetIDFromTime() (int64, error) {
-	dbinfo := "host=localhost port=5432 user=postgres password=postgres dbname=users_bot sslmode=disable"
-
-	db, err := sql.Open("postgres", dbinfo)
-	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	defer func() {
 		if err = db.Close(); err != nil {
@@ -90,23 +71,32 @@ func (u *User) GetIDFromTime() (int64, error) {
 	}()
 
 	query := "SELECT id FROM users WHERE mailing_time=$1"
-	result, err := db.Query(query, u.Time)
+	var Ids []int64
+	result, err := db.Query(query, time)
+	if err != nil {
+		return nil, err
+	}
 	for result.Next() {
-		if err = result.Scan(&u.Id); err != nil {
-			return 0, err
+		var id int64
+		if err = result.Scan(&id); err != nil {
+			return nil, err
 		}
+		Ids = append(Ids, id)
 	}
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return u.Id, nil
+	return Ids, nil
 }
 
 func GetIfUserIsMailing(id int64) (bool, error) {
-	dbinfo := "host=localhost port=5432 user=postgres password=postgres dbname=users_bot sslmode=disable"
+	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"), os.Getenv("SSLMODE"))
 
-	db, err := sql.Open("postgres", dbinfo)
+	db, err := sql.Open("postgres", dbInfo)
 	if err != nil {
 		return false, err
 	}
