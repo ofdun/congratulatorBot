@@ -3,6 +3,7 @@ package bots
 import (
 	"fmt"
 	tele "gopkg.in/telebot.v3"
+	"os"
 	"strconv"
 	"telegramBot/internal/download"
 	"telegramBot/internal/storage"
@@ -32,14 +33,14 @@ func StartTelegramBot(bot *TelegramBot) {
 	bot.Start()
 }
 
-func timeIsValid(time string) (bool, string) {
+func timeIsValid(time string) (bool, string, int) {
 	if len(time) < 4 || len(time) > 5 {
-		return false, ""
+		return false, "", 0
 	} else if len(time) == 4 {
 		time = "0" + time
 	}
 	if _, err := strconv.Atoi(string(time[2])); err == nil {
-		return false, ""
+		return false, "", 0
 	}
 
 	hoursString := time[0:2]
@@ -47,33 +48,48 @@ func timeIsValid(time string) (bool, string) {
 
 	hours, err := strconv.Atoi(hoursString)
 	if err != nil {
-		return false, ""
+		return false, "", 0
 	}
 	if hours > 23 || hours < 0 {
-		return false, ""
+		return false, "", 0
 	}
 
 	minutes, err := strconv.Atoi(minutesString)
 	if err != nil {
-		return false, ""
+		return false, "", 0
 	}
 	if minutes > 59 || minutes < 0 {
-		return false, ""
+		return false, "", 0
 	}
 
-	return true, hoursString + ":" + minutesString
+	return true, hoursString + ":" + minutesString, hours*3600 + minutes*60
 }
 
 func onTime(c tele.Context) error {
 	mailingTime := c.Message().Payload
-	if valid, formattedTime := timeIsValid(mailingTime); valid {
-		user := storage.User{Id: c.Chat().ID, Time: formattedTime}
-		if err := user.AddUserToMailing(); err != nil {
+	offsetFromUTC, err := strconv.Atoi(os.Getenv("TIME_OFFSET"))
+	if err != nil {
+		return err
+	}
+	userIsMailing, err := storage.GetIfUserIsMailing(c.Chat().ID)
+	if err != nil {
+		return err
+	}
+	if valid, formattedTime, secondsSinceMidnight := timeIsValid(mailingTime); valid {
+		id := c.Chat().ID
+		time_ := int64(secondsSinceMidnight - offsetFromUTC*3600)
+		if userIsMailing {
+			if err = storage.RemoveUserFromMailing(id); err != nil {
+				return err
+			}
+		}
+		if err := storage.AddUserToMailing(id, time_); err != nil {
 			return err
 		}
 		response := fmt.Sprintf("Рассылка в %s подключена🤙🤣🤣", formattedTime)
 		return c.Send(response, createMenu(true))
 	}
+
 	return c.Send("Неверный формат времени")
 }
 
@@ -147,4 +163,31 @@ func onText(c tele.Context) error {
 	}
 
 	return nil
+}
+
+func sendPostcard(bot *TelegramBot, id int64) error {
+	postcardPath, err := storage.GetRandomPostcardPath()
+	if err != nil {
+		return err
+	}
+	if postcardPath == "" {
+		return nil
+	}
+
+	file := tele.FromDisk(postcardPath)
+	if download.IsVideo(postcardPath) {
+		postcard := &tele.Video{File: file}
+		_, err = bot.Send(&tele.Chat{ID: id}, postcard)
+		if err != nil {
+			return err
+		}
+		return nil
+	} else {
+		postcard := &tele.Photo{File: file}
+		_, err = bot.Send(&tele.Chat{ID: id}, postcard)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 }
