@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"telegramBot/internal/model"
 )
 
@@ -18,12 +19,12 @@ type Database struct {
 
 func NewDatabase() *Database {
 	return &Database{
-		host:     "localhost",
-		port:     "5432",
-		user:     "postgres",
-		password: "postgres",
-		dbname:   "users_bot",
-		sslMode:  "disable",
+		host:     os.Getenv("POSTGRES_HOST"),
+		port:     os.Getenv("POSTGRES_PORT"),
+		user:     os.Getenv("POSTGRES_USER"),
+		password: os.Getenv("POSTGRES_PASSWORD"),
+		dbname:   os.Getenv("POSTGRES_DB"),
+		sslMode:  os.Getenv("SSLMODE"),
 	}
 }
 
@@ -145,7 +146,10 @@ func GetRandomPostcardPath() (string, error) {
 	// TODO env variables
 	// dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 	//	p.db.host, p.db.port, p.db.user, p.db.password, p.db.dbname, p.db.sslMode)
-	dbInfo := "host=localhost port=5432 user=postgres password=postgres dbname=users_bot sslmode=disable"
+	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"), os.Getenv("SSLMODE"))
 	var path string
 
 	db, err := sql.Open("postgres", dbInfo)
