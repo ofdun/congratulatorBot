@@ -1,11 +1,11 @@
 package parser
 
 import (
+	"CongratulatorBot/internal/model"
 	"github.com/PuerkitoBio/goquery"
 	"io"
 	"net/http"
 	"strings"
-	"telegramBot/internal/model"
 	"unicode"
 )
 

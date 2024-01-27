@@ -1,12 +1,12 @@
 package bots
 
 import (
+	"CongratulatorBot/internal/download"
+	"CongratulatorBot/internal/storage"
 	"fmt"
 	tele "gopkg.in/telebot.v3"
 	"os"
 	"strconv"
-	"telegramBot/internal/download"
-	"telegramBot/internal/storage"
 	"time"
 )
 
@@ -25,10 +25,14 @@ func NewTelegramBot(token string) (*TelegramBot, error) {
 	return &TelegramBot{bot}, nil
 }
 
-func StartTelegramBot(bot *TelegramBot) {
-	bot.Handle(tele.OnText, onText)
+func StartTelegramBot(bot *TelegramBot, errorChan chan error) {
+	bot.Handle(tele.OnText, func(context tele.Context) error {
+		return onText(context, errorChan)
+	})
 	bot.Handle("/start", onStart)
-	bot.Handle("/time", onTime)
+	bot.Handle("/time", func(context tele.Context) error {
+		return onTime(context, errorChan)
+	})
 
 	bot.Start()
 }
@@ -65,26 +69,26 @@ func timeIsValid(time string) (bool, string, int) {
 	return true, hoursString + ":" + minutesString, hours*3600 + minutes*60
 }
 
-func onTime(c tele.Context) error {
+func onTime(c tele.Context, errorChan chan error) error {
 	mailingTime := c.Message().Payload
 	offsetFromUTC, err := strconv.Atoi(os.Getenv("TIME_OFFSET"))
 	if err != nil {
-		return err
+		errorChan <- err
 	}
 	userIsMailing, err := storage.GetIfUserIsMailing(c.Chat().ID)
 	if err != nil {
-		return err
+		errorChan <- err
 	}
 	if valid, formattedTime, secondsSinceMidnight := timeIsValid(mailingTime); valid {
 		id := c.Chat().ID
 		time_ := int64(secondsSinceMidnight - offsetFromUTC*3600)
 		if userIsMailing {
 			if err = storage.RemoveUserFromMailing(id); err != nil {
-				return err
+				errorChan <- err
 			}
 		}
 		if err := storage.AddUserToMailing(id, time_); err != nil {
-			return err
+			errorChan <- err
 		}
 		response := fmt.Sprintf("Рассылка в %s подключена🤙🤣🤣", formattedTime)
 		return c.Send(response, createMenu(true))
@@ -118,10 +122,10 @@ func onStart(c tele.Context) error {
 	return c.Send("Привет! Я поздравлю тебя с праздником!", markup)
 }
 
-func onText(c tele.Context) error {
+func onText(c tele.Context, errorChan chan error) error {
 	isMailing, err := storage.GetIfUserIsMailing(c.Chat().ID)
 	if err != nil {
-		return err
+		errorChan <- err
 	}
 
 	markup := createMenu(isMailing)
@@ -132,7 +136,7 @@ func onText(c tele.Context) error {
 		{
 			postcardPath, err := storage.GetRandomPostcardPath()
 			if err != nil {
-				return err
+				errorChan <- err
 			}
 			if postcardPath == "" {
 				return c.Send("Сегодня нет праздников :(", markup)
@@ -155,7 +159,7 @@ func onText(c tele.Context) error {
 		{
 			err = storage.RemoveUserFromMailing(c.Chat().ID)
 			if err != nil {
-				return err
+				errorChan <- err
 			}
 
 			return c.Send("Рассылка отключена😈", createMenu(false))
@@ -165,10 +169,10 @@ func onText(c tele.Context) error {
 	return nil
 }
 
-func sendPostcard(bot *TelegramBot, id int64) error {
+func sendPostcard(bot *TelegramBot, id int64, errorChan chan error) error {
 	postcardPath, err := storage.GetRandomPostcardPath()
 	if err != nil {
-		return err
+		errorChan <- err
 	}
 	if postcardPath == "" {
 		return nil
@@ -179,15 +183,14 @@ func sendPostcard(bot *TelegramBot, id int64) error {
 		postcard := &tele.Video{File: file}
 		_, err = bot.Send(&tele.Chat{ID: id}, postcard)
 		if err != nil {
-			return err
-		}
-		return nil
-	} else {
-		postcard := &tele.Photo{File: file}
-		_, err = bot.Send(&tele.Chat{ID: id}, postcard)
-		if err != nil {
-			return err
+			errorChan <- err
 		}
 		return nil
 	}
+	postcard := &tele.Photo{File: file}
+	_, err = bot.Send(&tele.Chat{ID: id}, postcard)
+	if err != nil {
+		errorChan <- err
+	}
+	return nil
 }

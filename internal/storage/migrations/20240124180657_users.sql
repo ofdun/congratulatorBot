@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS users (
     id           INTEGER PRIMARY KEY,
-    mailing_time TIMESTAMP NOT NULL
+    mailing_time INTEGER NOT NULL
 );
 -- +goose StatementEnd
 

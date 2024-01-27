@@ -30,3 +30,19 @@ func NewPostcard(holiday string, page string) *Postcard {
 		Page:    page,
 	}
 }
+
+type DiscordConfigMessages struct {
+	HelpMessage           string `json:"helpMessage"`
+	NoHolidaysMessage     string `json:"noHolidaysMessage"`
+	BadTimeMessage        string `json:"badTimeMessage"`
+	MailingDisableMessage string `json:"mailingDisableMessage"`
+	MailingEnableMessage  string `json:"mailingEnableMessage"`
+}
+
+type DiscordConfig struct {
+	Localization map[string]DiscordConfigMessages `json:"languages"`
+}
+
+func NewDiscordConfig() *DiscordConfig {
+	return &DiscordConfig{}
+}

@@ -1,11 +1,14 @@
 package storage
 
 import (
+	"CongratulatorBot/internal/model"
 	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
 	"os"
-	"telegramBot/internal/model"
 )
+
+// TODO errorChan integration
 
 type Database struct {
 	host      string
