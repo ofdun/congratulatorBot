@@ -75,7 +75,7 @@ func onTime(c tele.Context, errorChan chan error) error {
 	if err != nil {
 		errorChan <- err
 	}
-	userIsMailing, err := storage.GetIfUserIsMailing(c.Chat().ID)
+	userIsMailing, err := storage.GetIfUserIsMailing(c.Chat().ID, false)
 	if err != nil {
 		errorChan <- err
 	}
@@ -83,11 +83,11 @@ func onTime(c tele.Context, errorChan chan error) error {
 		id := c.Chat().ID
 		time_ := int64(secondsSinceMidnight - offsetFromUTC*3600)
 		if userIsMailing {
-			if err = storage.RemoveUserFromMailing(id); err != nil {
+			if err = storage.RemoveUserFromMailing(id, false); err != nil {
 				errorChan <- err
 			}
 		}
-		if err := storage.AddUserToMailing(id, time_); err != nil {
+		if err = storage.AddUserToMailing(id, time_, false); err != nil {
 			errorChan <- err
 		}
 		response := fmt.Sprintf("Рассылка в %s подключена🤙🤣🤣", formattedTime)
@@ -123,7 +123,7 @@ func onStart(c tele.Context) error {
 }
 
 func onText(c tele.Context, errorChan chan error) error {
-	isMailing, err := storage.GetIfUserIsMailing(c.Chat().ID)
+	isMailing, err := storage.GetIfUserIsMailing(c.Chat().ID, false)
 	if err != nil {
 		errorChan <- err
 	}
@@ -157,7 +157,7 @@ func onText(c tele.Context, errorChan chan error) error {
 		}
 	case "Отключить рассылку📬":
 		{
-			err = storage.RemoveUserFromMailing(c.Chat().ID)
+			err = storage.RemoveUserFromMailing(c.Chat().ID, false)
 			if err != nil {
 				errorChan <- err
 			}
