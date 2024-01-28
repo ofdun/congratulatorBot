@@ -6,7 +6,8 @@ import (
 	"os"
 )
 
-func AddUserToMailing(id int64, time_ int64) error {
+func AddUserToMailing(id int64, time_ int64, discord bool) error {
+	var query string
 	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"),
@@ -22,7 +23,11 @@ func AddUserToMailing(id int64, time_ int64) error {
 		}
 	}()
 
-	query := "INSERT INTO users (id, mailing_time) VALUES ($1, $2)"
+	if discord {
+		query = "INSERT INTO discord_servers (id, mailing_time) VALUES ($1, $2)"
+	} else {
+		query = "INSERT INTO users (id, mailing_time) VALUES ($1, $2)"
+	}
 	if _, err = db.Exec(query, id, time_); err != nil {
 		return err
 	}
@@ -30,7 +35,8 @@ func AddUserToMailing(id int64, time_ int64) error {
 	return nil
 }
 
-func RemoveUserFromMailing(id int64) error {
+func RemoveUserFromMailing(id int64, discord bool) error {
+	var query string
 	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"),
@@ -45,8 +51,11 @@ func RemoveUserFromMailing(id int64) error {
 			return
 		}
 	}()
-
-	query := "DELETE FROM users WHERE id=$1"
+	if discord {
+		query = "DELETE FROM discord_servers WHERE id=$1"
+	} else {
+		query = "DELETE FROM users WHERE id=$1"
+	}
 	if _, err = db.Exec(query, id); err != nil {
 		return err
 	}
@@ -54,7 +63,8 @@ func RemoveUserFromMailing(id int64) error {
 	return nil
 }
 
-func GetIDsFromTime(time int) ([]int64, error) {
+func GetIDsFromTime(time int, discord bool) ([]int64, error) {
+	var query string
 	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"),
@@ -70,7 +80,11 @@ func GetIDsFromTime(time int) ([]int64, error) {
 		}
 	}()
 
-	query := "SELECT id FROM users WHERE mailing_time=$1"
+	if discord {
+		query = "SELECT id FROM discord_servers WHERE mailing_time=$1"
+	} else {
+		query = "SELECT id FROM users WHERE mailing_time=$1"
+	}
 	var Ids []int64
 	result, err := db.Query(query, time)
 	if err != nil {
@@ -90,7 +104,8 @@ func GetIDsFromTime(time int) ([]int64, error) {
 	return Ids, nil
 }
 
-func GetIfUserIsMailing(id int64) (bool, error) {
+func GetIfUserIsMailing(id int64, discord bool) (bool, error) {
+	var query string
 	dbInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"),
 		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"),
@@ -105,14 +120,17 @@ func GetIfUserIsMailing(id int64) (bool, error) {
 			return
 		}
 	}()
-
-	query := "SELECT id FROM users WHERE id=$1"
-	result, err := db.Query(query, id)
-	for result.Next() {
-		return true, nil
+	if discord {
+		query = "SELECT id FROM discord_servers WHERE id=$1"
+	} else {
+		query = "SELECT id FROM users WHERE id=$1"
 	}
+	result, err := db.Query(query, id)
 	if err != nil {
 		return false, err
+	}
+	for result.Next() {
+		return true, nil
 	}
 
 	return false, nil
