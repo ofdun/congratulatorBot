@@ -33,10 +33,11 @@ func NewPostcard(holiday string, page string) *Postcard {
 
 type DiscordConfigMessages struct {
 	HelpMessage           string `json:"helpMessage"`
-	NoHolidaysMessage     string `json:"noHolidaysMessage"`
+	NoHolidaysMessage     string `json:"noHolidaysMessage"` // TODO not forget
 	BadTimeMessage        string `json:"badTimeMessage"`
 	MailingDisableMessage string `json:"mailingDisableMessage"`
 	MailingEnableMessage  string `json:"mailingEnableMessage"`
+	LoadingMessage        string `json:"loadingMessage"`
 }
 
 type DiscordConfig struct {
