@@ -21,11 +21,15 @@ func main() {
 		panic(err)
 	}
 
-	go bots.StartTelegramBot(telegramBot, errorChan)
-	go bots.EveryMinuteLoop(telegramBot, errorChan)
-
 	discordToken := os.Getenv("DISCORD_BOT_TOKEN")
-	go bots.StartDiscordBot(discordToken, errorChan)
+	discordBot, err := bots.NewDiscordBot(discordToken)
+	if err != nil {
+		panic(err)
+	}
+
+	go bots.StartDiscordBot(discordBot, errorChan)
+	go bots.StartTelegramBot(telegramBot, errorChan)
+	go bots.EveryMinuteLoop(discordBot, telegramBot, errorChan)
 
 	select {
 	case err = <-errorChan:
