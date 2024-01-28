@@ -73,6 +73,16 @@ var (
 				panic(err)
 			}
 
+			if pathToPostcard == "" {
+				noHolidaysMessage := config.Localization["ru"].NoHolidaysMessage
+				if _, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+					Content: &noHolidaysMessage,
+				}); err != nil {
+					panic(err)
+				}
+				return
+			}
+
 			file, err := os.Open(pathToPostcard)
 			if err != nil {
 				panic(err)
