@@ -3,6 +3,7 @@ package bots
 import (
 	"CongratulatorBot/internal/download"
 	"CongratulatorBot/internal/storage"
+	"github.com/bwmarrin/discordgo"
 	"math"
 	"os"
 	"strconv"
@@ -20,7 +21,7 @@ func isClose(f int, s int, approx int) bool {
 	return false
 }
 
-func EveryMinuteLoop(telegramBot *TelegramBot, errorChan chan error) {
+func EveryMinuteLoop(discordBot *discordgo.Session, telegramBot *TelegramBot, errorChan chan error) {
 	files, err := os.ReadDir("./internal/storage/postcards/")
 	if err != nil {
 		errorChan <- err
@@ -40,22 +41,29 @@ func EveryMinuteLoop(telegramBot *TelegramBot, errorChan chan error) {
 		if isClose(timeInUTC3, 150, 59) {
 			download.NightlyPostcardDownload(errorChan)
 		}
-		doMailing(telegramBot, errorChan)
+		doMailing(discordBot, telegramBot, errorChan)
 	}
 }
 
-func doMailing(bot *TelegramBot, errorChan chan error) {
+func doMailing(discordBot *discordgo.Session, telegramBot *TelegramBot, errorChan chan error) {
 	timeSinceMidnight := getTimeSinceMidnightUTC()
 	timeSinceMidnight -= timeSinceMidnight % 60
-	telegramUsers, err := storage.GetIDsFromTime(timeSinceMidnight)
+	telegramUsers, err := storage.GetIDsFromTime(timeSinceMidnight, false)
 	if err != nil {
 		errorChan <- err
 	}
 	if len(telegramUsers) > 0 {
 		for _, user := range telegramUsers {
-			if err = sendPostcard(bot, user, errorChan); err != nil {
+			if err = sendPostcard(telegramBot, user, errorChan); err != nil {
 				errorChan <- err
 			}
+		}
+	}
+
+	discordChannels, err := storage.GetIDsFromTime(timeSinceMidnight, true)
+	if len(discordChannels) > 0 {
+		for _, channelID := range discordChannels {
+			sendDiscordPostcard(discordBot, strconv.Itoa(int(channelID)))
 		}
 	}
 }
