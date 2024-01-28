@@ -14,8 +14,8 @@ import (
 var (
 	pathToConfig                 = "internal/config/discordConfig.json"
 	config                       = parseConfig(pathToConfig) // TODO multilingual
-	appID                        = "1170807660279505076"
-	guildID                      = "1200170010111393792"
+	appID                        = os.Getenv("DISCORD_APPID")
+	guildID                      = ""
 	adminMemberPermissions int64 = discordgo.PermissionAdministrator
 
 	commands = []*discordgo.ApplicationCommand{
